@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cuaderno interactivo: El cono circular recto — Adecuación curricular significativa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --paper:#F2F1ED;
+    --paper-line:#E1DED4;
+    --ink:#1C1A17;
+    --ink-soft:#5A564C;
+    --accent:#C4842A;
+    --accent-soft:#F3E3C9;
+    --ok:#2F9E6E;
+    --ok-soft:#DCF3E8;
+    --bad:#C24444;
+    --bad-soft:#FBE1E1;
+    --card:#FFFFFF;
+    --slate:#232A33;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      repeating-linear-gradient(135deg, var(--paper-line) 0 1px, transparent 1px 22px),
+      var(--paper);
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+    padding:28px 18px 70px;
+    min-height:100vh;
+  }
+  .wrap{max-width:940px;margin:0 auto;}
+
+  .progress-wrap{
+    position:fixed;left:0;bottom:0;width:100%;
+    background:#fff;border-top:1px solid #E4E0D3;
+    padding:9px 18px 10px;z-index:50;
+    box-shadow:0 -6px 16px -10px rgba(28,26,23,.25);
+  }
+  .progress-track{
+    height:8px;max-width:940px;margin:0 auto 6px;
+    background:#EDE8DB;border-radius:999px;overflow:hidden;
+  }
+  .progress-fill{height:100%;width:33.3%;background:var(--accent);transition:width .3s ease;}
+  .progress-label{max-width:940px;margin:0 auto;text-align:center;font-size:12px;color:var(--ink-soft);}
+
+  .top-banner{
+    background:linear-gradient(135deg,#16233A,#26406B);
+    color:#fff;border-radius:16px;padding:24px 28px;margin-bottom:22px;
+    box-shadow:0 18px 40px -22px rgba(22,35,58,.5);
+  }
+  .top-banner h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:clamp(21px,3.2vw,29px);
+    font-weight:600;margin:0 0 8px;line-height:1.15;
+  }
+  .top-banner .sub{margin:0 0 10px;font-size:15px;opacity:.92;}
+  .top-banner .authors{margin:0;font-size:13px;opacity:.72;}
+
+  .rubric-title{
+    font-family:'Space Grotesk',sans-serif;font-weight:600;
+    font-size:22px;margin:0 0 6px;color:var(--ink);
+    border-bottom:2px solid var(--accent);padding-bottom:8px;
+  }
+
+  .binder{display:flex;gap:0;background:var(--card);border-radius:18px;box-shadow:0 18px 40px -22px rgba(28,26,23,.35);overflow:hidden;border:1px solid #E7E4DA;}
+  .spiral{
+    flex:0 0 34px;
+    background:repeating-linear-gradient(180deg, transparent 0 18px, #ECE8DD 18px 20px);
+    position:relative;
+    border-right:1px dashed #D6D1C2;
+  }
+  .spiral span{
+    position:absolute;left:50%;transform:translateX(-50%);
+    width:12px;height:12px;border-radius:50%;
+    background:var(--paper);border:2px solid #C4BEAA;
+  }
+  .card-body{flex:1;min-width:0;padding:26px 30px 34px;}
+
+  .tabs{display:flex;gap:8px;margin-bottom:22px;border-bottom:2px solid #ECE9DE;}
+  .tab-btn{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;font-size:15px;
+    background:#F7F5EE;color:var(--ink-soft);
+    border:1px solid #ECE9DE;border-bottom:none;
+    padding:10px 18px 12px;
+    border-radius:12px 12px 0 0;
+    cursor:pointer;
+    transform:translateY(2px);
+    transition:transform .15s ease, color .15s ease, background .15s ease;
+  }
+  .tab-btn:hover{color:var(--ink);}
+  .tab-btn.active{
+    background:var(--card);
+    color:var(--accent);
+    border-color:#ECE9DE;
+    transform:translateY(0);
+    box-shadow:0 -2px 0 var(--accent) inset;
+  }
+
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  .lead{color:var(--ink-soft);font-size:14.5px;line-height:1.6;margin:0 0 22px;max-width:66ch;}
+  .lead b{color:var(--ink);}
+
+  .qcard{
+    border:1px solid #ECE9DE;
+    border-radius:14px;
+    padding:18px 20px 20px;
+    margin-bottom:16px;
+    background:#FDFCF9;
+  }
+  .qhead{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+  .qnum{
+    font-family:'Space Grotesk',sans-serif;font-weight:600;
+    width:28px;height:28px;border-radius:50%;
+    background:var(--slate);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-size:13.5px;
+    flex:0 0 auto;
+  }
+  .qmeta{font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);font-weight:600;}
+  .qprompt{font-size:15.5px;line-height:1.55;margin:0 0 14px;color:var(--ink);}
+
+  .opts{display:flex;flex-direction:column;gap:8px;}
+  .opts.grid3{flex-direction:row;flex-wrap:wrap;}
+  .opt{
+    display:flex;align-items:center;gap:10px;
+    border:1.5px solid #E4E0D3;border-radius:10px;
+    padding:10px 12px;cursor:pointer;
+    background:#fff;font-size:14.5px;
+    transition:border-color .12s ease, background .12s ease;
+  }
+  .opt:hover{border-color:var(--accent);}
+  .opt.selected{border-color:var(--accent);background:var(--accent-soft);}
+  .opt input{accent-color:var(--accent);width:16px;height:16px;flex:0 0 auto;}
+  .opt.imgopt{flex-direction:column;align-items:center;text-align:center;width:170px;gap:6px;}
+  .opt.imgopt svg{width:120px;height:100px;}
+  .opt.imgopt .optlabel{font-weight:600;color:var(--ink-soft);font-size:13px;}
+
+  .actions{display:flex;justify-content:flex-end;gap:10px;margin-top:22px;}
+  .btn{
+    font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14.5px;
+    border:none;border-radius:10px;padding:12px 22px;cursor:pointer;
+    background:var(--accent);color:#fff;
+    transition:filter .12s ease;
+  }
+  .btn:hover{filter:brightness(1.06);}
+  .btn.secondary{background:#F1EEE3;color:var(--ink);border:1px solid #E4E0D3;}
+  .btn:disabled{background:#D7D2C2;cursor:not-allowed;}
+
+  .notice{
+    border:1.5px dashed #D7D2C2;border-radius:12px;
+    padding:26px 20px;text-align:center;color:var(--ink-soft);font-size:14.5px;
+  }
+
+  .student-hint{
+    font-size:13.5px;color:var(--ink-soft);margin:0 0 8px;
+  }
+  .student-hint b{color:var(--ink);}
+  .student-bar{
+    display:flex;flex-wrap:wrap;gap:14px;
+    background:#F7F5EE;border:1px solid #ECE9DE;border-radius:12px;
+    padding:12px 16px;margin-bottom:20px;
+  }
+  .student-field{display:flex;flex-direction:column;gap:4px;flex:1;min-width:180px;}
+  .student-field label{font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);font-weight:600;}
+  .student-field input, .student-field select{
+    border:1.5px solid #DDD8C8;border-radius:8px;padding:8px 10px;
+    font-family:'Inter',sans-serif;font-size:14px;color:var(--ink);background:#fff;
+  }
+  .student-field input:focus, .student-field select:focus{outline:none;border-color:var(--accent);}
+  .student-field.section-field{max-width:200px;}
+  .score-hero{
+    display:flex;align-items:center;gap:22px;flex-wrap:wrap;
+    background:linear-gradient(135deg,#232A33,#3A4655);
+    color:#fff;border-radius:16px;padding:22px 26px;margin-bottom:22px;
+  }
+  .score-ring{position:relative;width:96px;height:96px;flex:0 0 auto;}
+  .score-ring svg{transform:rotate(-90deg);}
+  .score-ring .pct{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:19px;
+  }
+  .score-text h2{font-family:'Space Grotesk',sans-serif;margin:0 0 4px;font-size:20px;}
+  .score-text p{margin:0;font-size:13.5px;opacity:.85;}
+
+  table.results{width:100%;border-collapse:collapse;margin-bottom:26px;font-size:13.8px;}
+  table.results th, table.results td{border:1px solid #ECE9DE;padding:9px 10px;text-align:left;vertical-align:top;}
+  table.results th{background:#F7F5EE;font-family:'Space Grotesk',sans-serif;font-weight:600;color:var(--ink);}
+  .tag{display:inline-flex;align-items:center;gap:5px;font-weight:600;font-size:12.5px;padding:3px 9px;border-radius:999px;}
+  .tag.ok{background:var(--ok-soft);color:var(--ok);}
+  .tag.bad{background:var(--bad-soft);color:var(--bad);}
+
+  table.rubric{width:100%;border-collapse:collapse;font-size:13.3px;margin-top:6px;}
+  table.rubric th, table.rubric td{border:1px solid #ECE9DE;padding:10px;text-align:left;vertical-align:top;line-height:1.45;}
+  table.rubric th{background:#232A33;color:#fff;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:12.8px;}
+  table.rubric td.crit{font-weight:600;background:#F7F5EE;width:21%;}
+  table.rubric td.level0{background:#FBE1E1;}
+  table.rubric td.level1{background:#FCEFD8;}
+  table.rubric td.level2{background:#FFF6D9;}
+  table.rubric td.level3{background:#DCF3E8;}
+  table.rubric td.pts{width:9%;text-align:center;font-family:'Space Grotesk',sans-serif;font-weight:600;}
+  .achieved{outline:3px solid var(--accent);outline-offset:-3px;position:relative;}
+  .achieved::after{content:"✓ obtenido";position:absolute;top:4px;right:6px;font-size:10px;font-weight:700;color:var(--accent);}
+
+  .total-row td{background:#232A33 !important;color:#fff;font-family:'Space Grotesk',sans-serif;font-weight:600;}
+
+  .feedback-box{
+    border-left:4px solid var(--accent);
+    background:#FBF6EB;
+    border-radius:0 10px 10px 0;
+    padding:12px 16px;margin-bottom:10px;
+    font-size:13.5px;line-height:1.55;color:var(--ink);
+  }
+  .feedback-box b{color:var(--accent);}
+
+  .footnote{color:var(--ink-soft);font-size:12.5px;margin-top:18px;line-height:1.6;}
+  .habskill{font-size:12px;color:var(--accent);font-weight:600;margin:0 0 14px;}
+
+  @media (max-width:640px){
+    .card-body{padding:20px 16px 28px;}
+    .opts.grid3{gap:10px;}
+    .opt.imgopt{width:100%;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top-banner">
+    <h1>Cuaderno Interactivo — El cono circular recto</h1>
+    <p class="sub">Undécimo año · Matemática · Liceo de Paraíso · Versión con adecuación curricular significativa</p>
+    <p class="authors">Autoría: MSc. S. Melissa Cubero Solano y MSc. Miguel Villalta Ramírez</p>
+  </div>
+
+  <div class="binder">
+    <div class="spiral" id="spiral"></div>
+    <div class="card-body">
+
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="rubrica">📋 Rúbrica</button>
+        <button class="tab-btn" data-tab="resultados">📊 Resultados</button>
+        <button class="tab-btn" data-tab="ejercicios">📝 Selección única</button>
+      </div>
+
+      <!-- RÚBRICA -->
+      <div class="panel active" id="panel-rubrica">
+        <h2 class="rubric-title">Rúbrica de evaluación</h2>
+        <p class="lead">Esta tabla muestra cómo se va a calificar su trabajo. Son <b>4 habilidades</b> sobre el cono. Cuando usted responda las preguntas, la casilla que ganó se va a marcar sola. Al final puede descargar su resultado en PDF. Valor total: <b>12 puntos</b>.</p>
+
+        <div class="feedback-box"><b>Fecha de entrega:</b> semana del 21 al 25 de setiembre de 2026, en la primera lección de Matemática que le corresponda.</div>
+
+        <p class="student-hint">✏️ Antes de calificar: escriba su <b>nombre</b> y escoja su <b>sección</b>.</p>
+        <div class="student-bar">
+          <div class="student-field">
+            <label for="input-nombre">Nombre del estudiante</label>
+            <input type="text" id="input-nombre" placeholder="Escriba su nombre completo">
+          </div>
+          <div class="student-field section-field">
+            <label for="input-seccion">Sección</label>
+            <select id="input-seccion">
+              <option value="" disabled selected>Seleccione su sección</option>
+              <option value="11-1">11-1</option>
+              <option value="11-2">11-2</option>
+              <option value="11-3">11-3</option>
+              <option value="11-4">11-4</option>
+              <option value="11-5">11-5</option>
+              <option value="11-6">11-6</option>
+              <option value="11-7">11-7</option>
+              <option value="11-8">11-8</option>
+              <option value="11-9">11-9</option>
+              <option value="11-10">11-10</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="rubrica-static"></div>
+      </div>
+
+      <!-- RESULTADOS -->
+      <div class="panel" id="panel-resultados">
+        <div id="resultados-content">
+          <div class="notice">Responda las 8 preguntas en la pestaña <b>Selección única</b> y presione «Calificar cuaderno» para ver aquí su puntaje.</div>
+        </div>
+        <div class="actions" id="resultados-actions" style="display:none;">
+          <button class="btn secondary" id="btn-pdf">⬇️ Descargar PDF</button>
+        </div>
+      </div>
+
+      <!-- EJERCICIOS -->
+      <div class="panel" id="panel-ejercicios">
+        <p class="lead"><b>Indicaciones:</b> lea cada pregunta con calma. Escoja la respuesta que usted crea correcta. Solo hay <b>2 opciones</b> en cada pregunta. Cuando termine las 8 preguntas, presione <b>«Calificar cuaderno»</b>.</p>
+        <div id="questions"></div>
+        <div class="actions">
+          <button class="btn secondary" id="btn-clear">Borrar respuestas</button>
+          <button class="btn" id="btn-grade">Calificar cuaderno</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <p class="footnote">Cuaderno generado para uso docente, a partir de la sección «Visualización espacial: El cono circular recto» (páginas 28–32) del material de referencia (MSc. Miguel Villalta / MSc. Melissa Cubero) — undécimo año. Versión con <b>adecuación curricular significativa</b>: se mantienen las mismas cuatro habilidades específicas y la misma rúbrica de evaluación del material original; se simplifican los enunciados, se reduce a dos opciones de respuesta por ítem, se usan números enteros y sencillos, y se dan apoyos visuales directos (colores) en lugar de referencias por letras.</p>
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+  <div class="progress-label" id="progress-label">Progreso: 1/3 pestañas visitadas</div>
+</div>
+
+<script>
+/* ---------- decorative spiral dots ---------- */
+(function(){
+  const s=document.getElementById('spiral');
+  for(let i=0;i<26;i++){
+    const dot=document.createElement('span');
+    dot.style.top=(20+i*30)+'px';
+    s.appendChild(dot);
+  }
+})();
+
+/* ---------- SVG diagram library ---------- */
+const svgConeSimple = `<svg viewBox="0 0 180 156">
+  <defs>
+    <linearGradient id="coneGradMain" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#E4A85C"/>
+      <stop offset="55%" stop-color="#C4842A"/>
+      <stop offset="100%" stop-color="#93641C"/>
+    </linearGradient>
+    <radialGradient id="baseGradMain" cx="50%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#FCF2DF"/>
+      <stop offset="100%" stop-color="#E9D2A4"/>
+    </radialGradient>
+    <marker id="arrowRed" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#C24444"/>
+    </marker>
+  </defs>
+  <ellipse cx="90" cy="128" rx="55" ry="16" fill="url(#baseGradMain)" stroke="#1C1A17" stroke-width="1.6"/>
+  <path d="M90 14 L145 128 A55 16 0 0 1 35 128 Z" fill="url(#coneGradMain)" opacity="0.92"/>
+  <line x1="90" y1="14" x2="145" y2="128" stroke="#1C1A17" stroke-width="1.6" opacity="0.55"/>
+  <line x1="90" y1="14" x2="35" y2="128" stroke="#1C1A17" stroke-width="1.6" opacity="0.55"/>
+  <line x1="90" y1="14" x2="90" y2="128" stroke="#232A33" stroke-width="3" stroke-dasharray="5 4"/>
+  <line x1="90" y1="128" x2="143" y2="128" stroke="#C24444" stroke-width="3" marker-end="url(#arrowRed)"/>
+  <circle cx="90" cy="14" r="5" fill="#1C1A17" stroke="#fff" stroke-width="1.2"/>
+</svg>`;
+
+function coneBase(curveColor, curveDashed, extraBefore, extraAfter, planeD){
+  return `<svg viewBox="0 0 100 92">
+    <defs>
+      <linearGradient id="secConeGrad-${curveColor.replace('#','')}" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#E4A85C"/>
+        <stop offset="60%" stop-color="#C4842A"/>
+        <stop offset="100%" stop-color="#93641C"/>
+      </linearGradient>
+    </defs>
+    <ellipse cx="50" cy="72" rx="34" ry="10" fill="#FBEFDA" stroke="#1C1A17" stroke-width="1.3"/>
+    <path d="M50 8 L78 72 A34 10 0 0 1 22 72 Z" fill="url(#secConeGrad-${curveColor.replace('#','')})" opacity="0.9" stroke="#1C1A17" stroke-width="1.1"/>
+    <line x1="50" y1="8" x2="50" y2="72" stroke="#232A33" stroke-width="1" stroke-dasharray="2.5 2" opacity="0.55"/>
+    ${planeD ? `<path d="${planeD}" fill="#3D66B0" opacity="0.14" stroke="#3D66B0" stroke-width="1" stroke-dasharray="3 2"/>` : ''}
+    ${extraBefore || ''}
+    <path d="${curveDashed}" fill="none" stroke="${curveColor}" stroke-width="2.6" stroke-linecap="round"/>
+    ${extraAfter || ''}
+  </svg>`;
+}
+
+const svgSectionCirc = coneBase('#C24444', 'M31 42 A19 5.6 0 1 0 69 42 A19 5.6 0 1 0 31 42', '', '', 'M20 42 L80 42 L74 46 L14 46 Z');
+const svgSectionEllipse = coneBase('#C24444', 'M32.5 39 A20 9 -8 1 0 70.7 33.2 A20 9 -8 1 0 32.5 39', '', '', 'M22 22 L84 44 L70 58 L8 36 Z');
+const svgSectionParabola = coneBase('#C24444', 'M32 72 Q50 20 68 72', '', '', 'M14 88 L86 88 L64 20 L36 20 Z');
+const svgSectionHiperbola = coneBase('#C24444', 'M58 26 Q70 49 58 71', '', '', 'M74 4 L74 90 L82 90 L82 4 Z');
+
+/* ---------- question bank ---------- */
+/* Las 4 habilidades específicas del material de referencia, usadas literalmente como criterios:
+   H1: Identificar la superficie lateral, la base, la altura, el radio y el diámetro de la base y el vértice de un cono circular recto.
+   H2: Determinar qué figuras se obtienen mediante secciones planas de un cono circular recto y características métricas de ellas.
+   H3: Reconocer elipses, parábolas e hipérbolas en diferentes contextos.
+   H4: Plantear y resolver problemas que involucren secciones de un cono mediante planos paralelos a la base. */
+const questions = [
+  { id:1, skill:1, diff:'Fácil', type:'diagram',
+    diagram:svgConeSimple,
+    prompt:'Observe el cono. La línea <b style="color:#232A33">negra punteada</b> (a rayas) va desde la punta hasta el centro de la base. ¿Qué parte del cono representa esa línea?',
+    options:[
+      {key:'A', text:'La altura'},
+      {key:'B', text:'El radio de la base'}
+    ], correct:'A' },
+
+  { id:2, skill:1, diff:'Fácil', type:'diagram',
+    diagram:svgConeSimple,
+    prompt:'Observe el mismo cono. La <b style="color:#C24444">flecha roja</b> va desde el centro de la base hasta el borde. ¿Qué parte del cono representa esa flecha?',
+    options:[
+      {key:'A', text:'La altura'},
+      {key:'B', text:'El radio de la base'}
+    ], correct:'B' },
+
+  { id:3, skill:2, diff:'Fácil', type:'img',
+    prompt:'Cortamos el cono con un corte <b>derecho y parejo</b> (paralelo a la base), sin tocar la punta. ¿Qué figura se forma?',
+    options:[
+      {key:'A', svg:svgSectionCirc},
+      {key:'B', svg:svgSectionParabola}
+    ], correct:'A' },
+
+  { id:4, skill:2, diff:'Fácil-Intermedio', type:'img',
+    prompt:'Ahora cortamos el cono con un corte <b>inclinado</b> (no derecho), sin tocar la base ni la punta. ¿Qué figura se forma?',
+    options:[
+      {key:'A', svg:svgSectionCirc},
+      {key:'B', svg:svgSectionEllipse}
+    ], correct:'B' },
+
+  { id:5, skill:3, diff:'Fácil', type:'text',
+    prompt:'Cuando lanzamos una pelota al aire, el camino (la trayectoria) que ella dibuja en el aire forma una curva llamada:',
+    options:[
+      {key:'A', text:'Parábola'},
+      {key:'B', text:'Línea recta'}
+    ], correct:'A' },
+
+  { id:6, skill:3, diff:'Fácil', type:'text',
+    prompt:'La forma de un aro de baloncesto, visto desde arriba, es un ejemplo de:',
+    options:[
+      {key:'A', text:'Circunferencia'},
+      {key:'B', text:'Parábola'}
+    ], correct:'A' },
+
+  { id:7, skill:4, diff:'Intermedio', type:'math',
+    prompt:'Un cono tiene altura total $H = 8\\text{ cm}$ y radio de la base $R = 4\\text{ cm}$. Se corta con un plano paralelo a la base, justo <b>a la mitad</b> de la altura ($h = 4\\text{ cm}$ desde la punta). ¿Cuál es el radio $r$ de esa sección? <span style="color:var(--ink-soft)">Pista: a la mitad de la altura, el radio también es la mitad del radio de la base.</span>',
+    options:[
+      {key:'A', text:'$r = 2\\ \\text{cm}$'},
+      {key:'B', text:'$r = 4\\ \\text{cm}$'}
+    ], correct:'A' },
+
+  { id:8, skill:4, diff:'Intermedio', type:'math',
+    prompt:'Un silo cónico (con la punta hacia abajo) tiene una altura de $H = 9\\text{ m}$ y un radio en la parte de arriba (la base) de $R = 3\\text{ m}$. El grano llega hasta $h = 3\\text{ m}$ medidos desde la punta, es decir, <b>a un tercio</b> de la altura. ¿Cuál es el radio $r$ de la superficie del grano en ese nivel? <span style="color:var(--ink-soft)">Pista: a un tercio de la altura, el radio también es un tercio del radio de la base.</span>',
+    options:[
+      {key:'A', text:'$r = 1\\ \\text{m}$'},
+      {key:'B', text:'$r = 3\\ \\text{m}$'}
+    ], correct:'A' }
+];
+
+const skillNames = {
+  1:'Identificar la superficie lateral, la base, la altura, el radio y el diámetro de la base y el vértice de un cono circular recto',
+  2:'Determinar qué figuras se obtienen mediante secciones planas de un cono circular recto y características métricas de ellas',
+  3:'Reconocer elipses, parábolas e hipérbolas en diferentes contextos',
+  4:'Plantear y resolver problemas que involucren secciones de un cono mediante planos paralelos a la base'
+};
+
+const rubricRows = [
+  { skill:1, name:skillNames[1],
+    d0:'No responde.',
+    d1:'Identifica de forma incorrecta la superficie lateral, la base, la altura, el radio o el diámetro del cono en la mayoría de los ítems.',
+    d2:'Identifica parcialmente la superficie lateral, la base, la altura, el radio o el diámetro del cono en la mayoría de los ítems.',
+    d3:'Identifica correctamente la superficie lateral, la base, la altura, el radio y el diámetro de la base del cono en todos los ítems.',
+    tip:'Repase la definición del cono circular recto y sus elementos: vértice, base, altura, radio y generatriz. Apóyese en un dibujo del cono y ubique cada parte.' },
+  { skill:2, name:skillNames[2],
+    d0:'No responde.',
+    d1:'Determina de forma incorrecta la figura que se obtiene al cortar el cono con un plano, en la mayoría de los ítems.',
+    d2:'Determina parcialmente la figura que se obtiene al cortar el cono con un plano, en la mayoría de los ítems.',
+    d3:'Determina correctamente la figura y sus características métricas al cortar el cono con un plano, en todos los ítems.',
+    tip:'Recuerde que la figura obtenida depende de la inclinación del plano de corte respecto a la base y de si pasa o no por el vértice. Compare los cuatro casos posibles.' },
+  { skill:3, name:skillNames[3],
+    d0:'No responde.',
+    d1:'Reconoce de forma incorrecta las elipses, parábolas o hipérbolas en los contextos planteados.',
+    d2:'Reconoce parcialmente las elipses, parábolas o hipérbolas en los contextos planteados.',
+    d3:'Reconoce correctamente las elipses, parábolas e hipérbolas en diferentes contextos.',
+    tip:'Repase las características que distinguen a la elipse, la parábola y la hipérbola según la posición del plano de corte respecto a la base y al vértice del cono.' },
+  { skill:4, name:skillNames[4],
+    d0:'No responde.',
+    d1:'Plantea y resuelve en forma incorrecta los problemas de secciones del cono mediante planos paralelos a la base.',
+    d2:'Plantea y resuelve parcialmente (con errores de procedimiento) los problemas de secciones del cono mediante planos paralelos a la base.',
+    d3:'Plantea y resuelve en forma correcta los problemas de secciones del cono mediante planos paralelos a la base.',
+    tip:'Practique el uso de la proporción entre triángulos semejantes ($\\dfrac{r_{\\text{sección}}}{r} = \\dfrac{h_{\\text{sección}}}{h}$) para hallar medidas en secciones paralelas a la base.' }
+];
+
+let selected = {};
+
+/* ---------- render questions ---------- */
+const qContainer = document.getElementById('questions');
+questions.forEach(q=>{
+  const card = document.createElement('div');
+  card.className='qcard';
+
+  let optsHtml = '';
+  if(q.type==='img'){
+    optsHtml = `<div class="opts grid3">${q.options.map(o=>`
+      <label class="opt imgopt" data-q="${q.id}" data-k="${o.key}">
+        <input type="radio" name="q${q.id}" value="${o.key}">
+        ${o.svg}
+        <span class="optlabel">Opción ${o.key}</span>
+      </label>`).join('')}</div>`;
+  } else {
+    optsHtml = `<div class="opts">${q.options.map(o=>`
+      <label class="opt" data-q="${q.id}" data-k="${o.key}">
+        <input type="radio" name="q${q.id}" value="${o.key}">
+        <span>${o.key}) ${o.text}</span>
+      </label>`).join('')}</div>`;
+  }
+
+  card.innerHTML = `
+    <div class="qhead">
+      <div class="qnum">${q.id}</div>
+      <div class="qmeta">${q.diff}</div>
+    </div>
+    <p class="habskill">Habilidad ${q.skill}</p>
+    <p class="qprompt">${q.prompt}</p>
+    ${q.type==='diagram' ? `<div style="margin-bottom:14px">${q.diagram}</div>` : ''}
+    ${optsHtml}
+  `;
+  qContainer.appendChild(card);
+});
+
+/* selection handling */
+qContainer.addEventListener('change', e=>{
+  if(e.target.type==='radio'){
+    const name = e.target.name;
+    const qid = parseInt(name.replace('q',''));
+    const val = e.target.value;
+    selected[qid]=val;
+    document.querySelectorAll(`.opt[data-q="${qid}"]`).forEach(el=>{
+      el.classList.toggle('selected', el.getAttribute('data-k')===val);
+    });
+  }
+});
+
+document.getElementById('btn-clear').addEventListener('click', ()=>{
+  selected = {};
+  document.querySelectorAll('.opt input[type=radio]').forEach(r=>r.checked=false);
+  document.querySelectorAll('.opt.selected').forEach(el=>el.classList.remove('selected'));
+});
+
+/* ---------- tabs ---------- */
+const visitedTabs = new Set(['rubrica']);
+function updateProgress(){
+  const total = document.querySelectorAll('.tab-btn').length;
+  const visited = visitedTabs.size;
+  document.getElementById('progress-fill').style.width = (visited/total*100)+'%';
+  document.getElementById('progress-label').textContent = `Progreso: ${visited}/${total} pestañas visitadas`;
+}
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+    visitedTabs.add(btn.dataset.tab);
+    updateProgress();
+    if(window.renderMathInElement){
+      renderMathInElement(document.getElementById('panel-'+btn.dataset.tab), {
+        delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]
+      });
+    }
+  });
+});
+updateProgress();
+
+/* ---------- grading ---------- */
+document.getElementById('btn-grade').addEventListener('click', ()=>{
+  const nombre = document.getElementById('input-nombre').value.trim();
+  const seccion = document.getElementById('input-seccion').value.trim();
+  if(!nombre || !seccion){
+    alert('Por favor complete su nombre y su sección antes de calificar el cuaderno.');
+    if(!nombre) document.getElementById('input-nombre').focus();
+    else document.getElementById('input-seccion').focus();
+    return;
+  }
+  const missing = questions.filter(q=>!selected[q.id]);
+  if(missing.length){
+    alert('Faltan por responder ' + missing.length + ' ítem(s): ' + missing.map(q=>q.id).join(', ') + '.');
+    return;
+  }
+  gradeAndRender(nombre, seccion);
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelector('.tab-btn[data-tab="resultados"]').classList.add('active');
+  document.getElementById('panel-resultados').classList.add('active');
+  document.getElementById('resultados-actions').style.display='flex';
+  renderMath();
+});
+
+/* ---------- PDF export ---------- */
+document.getElementById('btn-pdf').addEventListener('click', async ()=>{
+  const btn = document.getElementById('btn-pdf');
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Generando PDF…';
+
+  const source = document.getElementById('resultados-content');
+  const prevWidth = source.style.width;
+  const prevMaxWidth = source.style.maxWidth;
+  /* Ancho fijo tipo "hoja" para que las tablas no se recorten al capturar */
+  source.style.width = '740px';
+  source.style.maxWidth = '740px';
+
+  try{
+    const canvas = await html2canvas(source, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#ffffff'
+    });
+    const imgData = canvas.toDataURL('image/png');
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p','mm','a4');
+
+    const margin = 8;
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const imgWidth = pageWidth - margin*2;
+    const imgHeight = canvas.height * imgWidth / canvas.width;
+
+    let heightLeft = imgHeight;
+    let position = margin;
+
+    pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+    heightLeft -= (pageHeight - margin*2);
+
+    while (heightLeft > 0){
+      position = margin - (imgHeight - heightLeft);
+      pdf.addPage();
+      pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+      heightLeft -= (pageHeight - margin*2);
+    }
+
+    pdf.save('resultado_cono_circular_recto.pdf');
+  }catch(err){
+    console.error(err);
+    alert('No se pudo generar el PDF. Intente nuevamente.');
+  }finally{
+    source.style.width = prevWidth;
+    source.style.maxWidth = prevMaxWidth;
+    btn.disabled = false;
+    btn.textContent = original;
+  }
+});
+
+function renderMath(){
+  if(window.renderMathInElement){
+    renderMathInElement(document.body, {
+      delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]
+    });
+  }
+}
+
+function gradeAndRender(nombre, seccion){
+  let correctCount=0;
+  const rows = questions.map(q=>{
+    const chosen = selected[q.id];
+    const isCorrect = chosen===q.correct;
+    if(isCorrect) correctCount++;
+    const chosenLabel = q.options.find(o=>o.key===chosen);
+    const correctLabel = q.options.find(o=>o.key===q.correct);
+    const shortChosen = q.type==='img' ? ('Opción '+chosen) : (chosenLabel? (chosenLabel.text||('Opción '+chosen)) : '—');
+    const shortCorrect = q.type==='img' ? ('Opción '+q.correct) : (correctLabel? (correctLabel.text||('Opción '+q.correct)) : '—');
+    return {id:q.id, skill:q.skill, diff:q.diff, chosen, isCorrect, shortChosen, shortCorrect};
+  });
+
+  /* rubric levels per skill */
+  const bySkill = {};
+  rubricRows.forEach(r=>{ bySkill[r.skill] = rows.filter(x=>x.skill===r.skill); });
+
+  const levels = {};
+  let totalPts = 0;
+  rubricRows.forEach(r=>{
+    const items = bySkill[r.skill];
+    const nCorrect = items.filter(x=>x.isCorrect).length;
+    const n = items.length;
+    let lvl;
+    if(nCorrect===0) lvl=1;
+    else if(nCorrect===n) lvl=3;
+    else lvl=2;
+    levels[r.skill]=lvl;
+    totalPts += lvl;
+  });
+
+  const maxPts = rubricRows.length*3;
+  const pct = Math.round((correctCount/questions.length)*100);
+  const R = 40, C = 2*Math.PI*R;
+  const dash = (pct/100)*C;
+
+  let html = `
+  <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;padding:12px 16px;background:#F7F5EE;border:1px solid #ECE9DE;border-radius:12px;font-size:14px;">
+    <span><b>Estudiante:</b> ${nombre}</span>
+    <span><b>Sección:</b> ${seccion}</span>
+    <span><b>Fecha de entrega:</b> semana del 21 al 25 de setiembre de 2026, primera lección de Matemática</span>
+  </div>
+  <div class="score-hero">
+    <div class="score-ring">
+      <svg width="96" height="96" viewBox="0 0 96 96">
+        <circle cx="48" cy="48" r="${R}" stroke="#4A5666" stroke-width="10" fill="none"/>
+        <circle cx="48" cy="48" r="${R}" stroke="#C4842A" stroke-width="10" fill="none"
+          stroke-dasharray="${dash} ${C}" stroke-linecap="round"/>
+      </svg>
+      <div class="pct">${pct}%</div>
+    </div>
+    <div class="score-text">
+      <h2>${correctCount} de ${questions.length} ítems correctos</h2>
+      <p>Puntaje según rúbrica: <b>${totalPts} / ${maxPts} puntos</b></p>
+    </div>
+  </div>
+
+  ${(() => {
+    const weak = rubricRows.filter(r => levels[r.skill] < 3);
+    if(weak.length === 0){
+      return `<div class="feedback-box"><b>¡Excelente trabajo!</b> Acertó todos los ítems en las cuatro habilidades evaluadas.</div>`;
+    }
+    return `<p class="lead" style="margin-bottom:10px"><b>💡 Retroalimentación</b> — refuerce lo siguiente antes de continuar:</p>
+    ${weak.map(r => `<div class="feedback-box"><b>${r.name}:</b> ${r.tip}</div>`).join('')}`;
+  })()}
+
+  <p class="lead" style="margin-bottom:10px"><b>Rúbrica evaluada</b> — el nivel obtenido en cada habilidad se resalta con un borde.</p>
+  <table class="rubric">
+    <thead><tr><th>Habilidad específica</th><th>0</th><th>1</th><th>2</th><th>3</th><th>Puntos obtenidos</th></tr></thead>
+    <tbody>
+    ${rubricRows.map(r=>`
+      <tr>
+        <td class="crit">${r.name}</td>
+        <td class="level0 ${levels[r.skill]===0?'achieved':''}">${r.d0}</td>
+        <td class="level1 ${levels[r.skill]===1?'achieved':''}">${r.d1}</td>
+        <td class="level2 ${levels[r.skill]===2?'achieved':''}">${r.d2}</td>
+        <td class="level3 ${levels[r.skill]===3?'achieved':''}">${r.d3}</td>
+        <td class="pts">${levels[r.skill]}</td>
+      </tr>`).join('')}
+      <tr class="total-row"><td colspan="5" style="text-align:right;padding-right:14px;">Puntos obtenidos</td><td class="pts">${totalPts} / ${maxPts}</td></tr>
+    </tbody>
+  </table>
+  `;
+
+  document.getElementById('resultados-content').innerHTML = html;
+}
+
+/* ---------- static rubric tab ---------- */
+(function(){
+  const el = document.getElementById('rubrica-static');
+  const maxPts = rubricRows.length*3;
+  el.innerHTML = `
+  <table class="rubric">
+    <thead><tr><th>Habilidad específica</th><th>0</th><th>1</th><th>2</th><th>3</th><th>Puntos</th></tr></thead>
+    <tbody>
+    ${rubricRows.map(r=>`
+      <tr>
+        <td class="crit">${r.name}</td>
+        <td>${r.d0}</td>
+        <td>${r.d1}</td>
+        <td>${r.d2}</td>
+        <td>${r.d3}</td>
+        <td class="pts">3</td>
+      </tr>`).join('')}
+      <tr class="total-row"><td colspan="5" style="text-align:right;padding-right:14px;">Valor total</td><td class="pts">${maxPts}</td></tr>
+    </tbody>
+  </table>`;
+})();
+
+/* initial KaTeX render for ejercicios tab */
+window.addEventListener('load', renderMath);
+</script>
+</body>
+</html>
